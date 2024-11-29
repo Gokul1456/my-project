@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  web:      
+    image: myimage   # Assign a name (tag) to the built image
+    container_name: "mycontainer"
+    ports:
+      - "80:80"
+
+
