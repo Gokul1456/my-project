@@ -1,8 +1,10 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'ENV', choices: ['staging', 'production'], description: 'Deployment Environment')
+    environment {
+        DOCKER_DEV_REPO = 'gokul1114/dev-repo'
+        DOCKER_PROD_REPO = 'gokul1114/prod-repo'
+        IMAGE_TAG = "myimage:${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -11,43 +13,54 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Install Dependencies') {
+
+        stage('Build Docker Image') {
             steps {
-                sh 'npm install'
+                script {
+                    sh "docker build -t ${DOCKER_DEV_REPO}:${IMAGE_TAG} ."
+                }
             }
         }
-        stage('Run Tests') {
+
+        stage('Push to Docker Hub') {
+            when {
+                branch 'dev'
+            }
             steps {
-                sh 'npm test'
+                script {
+                    withDockerRegistry([credentialsId: 'docker-hub-credentials']) {
+                        sh "docker push ${DOCKER_DEV_REPO}:${IMAGE_TAG}"
+                    }
+                }
             }
         }
-        stage('Build') {
-            steps {
-                sh 'npm run build'
+
+        stage('Deploy to Prod Repo') {
+            when {
+                branch 'main'
             }
-        }
-        stage('Archive Build') {
             steps {
-                archiveArtifacts artifacts: 'build/**', fingerprint: true
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo "Deploying to ${params.ENV} environment..."
-                sh './deploy.sh ${params.ENV}' // Replace with your deployment script
+                script {
+                    withDockerRegistry([credentialsId: 'docker-hub-credentials']) {
+                        sh """
+                        docker build -t ${DOCKER_PROD_REPO}:${IMAGE_TAG} .
+                        docker push ${DOCKER_PROD_REPO}:${IMAGE_TAG}
+                        """
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline execution complete.'
+            echo "Pipeline execution completed!"
         }
         success {
-            echo 'Pipeline completed successfully!'
+            echo "Pipeline ran successfully!"
         }
         failure {
-            echo 'Pipeline failed. Please check logs for details.'
+            echo "Pipeline failed. Check logs for more details."
         }
     }
 }
