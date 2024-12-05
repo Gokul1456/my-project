@@ -28,7 +28,7 @@ pipeline {
             }
             steps {
                 script {
-                    withDockerRegistry([credentialsId: 'docker-hub-credentials']) {
+                    withDockerRegistry([credentialsId: '61e43631-2c6a-4e6e-9e11-42b9419efd65']) {
                         sh "docker push ${DOCKER_DEV_REPO}:${IMAGE_TAG}"
                     }
                 }
@@ -41,7 +41,7 @@ pipeline {
             }
             steps {
                 script {
-                    withDockerRegistry([credentialsId: 'docker-hub-credentials']) {
+                    withDockerRegistry([credentialsId: '61e43631-2c6a-4e6e-9e11-42b9419efd65']) {
                         sh """
                         docker build -t ${DOCKER_PROD_REPO}:${IMAGE_TAG} .
                         docker push ${DOCKER_PROD_REPO}:${IMAGE_TAG}
