@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_DEV_REPO = 'gokul1114/dev-repo'
         DOCKER_PROD_REPO = 'gokul1114/prod-repo'
-        IMAGE_TAG = "myimage:${env.BUILD_NUMBER}"
+        IMAGE_TAG = "myimage-${env.BUILD_NUMBER}" // Corrected invalid Docker tag format
     }
 
     stages {
@@ -17,6 +17,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Building Docker image with corrected tag format
                     sh "docker build -t ${DOCKER_DEV_REPO}:${IMAGE_TAG} ."
                 }
             }
@@ -28,6 +29,7 @@ pipeline {
             }
             steps {
                 script {
+                    // Using Docker registry credentials to push the image
                     withDockerRegistry([credentialsId: '61e43631-2c6a-4e6e-9e11-42b9419efd65']) {
                         sh "docker push ${DOCKER_DEV_REPO}:${IMAGE_TAG}"
                     }
@@ -41,6 +43,7 @@ pipeline {
             }
             steps {
                 script {
+                    // Building and pushing the production Docker image
                     withDockerRegistry([credentialsId: '61e43631-2c6a-4e6e-9e11-42b9419efd65']) {
                         sh """
                         docker build -t ${DOCKER_PROD_REPO}:${IMAGE_TAG} .
@@ -64,4 +67,3 @@ pipeline {
         }
     }
 }
-
